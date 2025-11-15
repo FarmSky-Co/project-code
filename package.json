@@ -1,0 +1,115 @@
+{
+  "name": "farmer-credit-scoring",
+  "version": "1.0.0",
+  "description": "AI-powered agricultural lending platform with ML credit scoring",
+  "keywords": ["machine-learning", "agriculture", "fintech", "credit-scoring", "streamlit"],
+  
+  "coolify": {
+    "type": "application",
+    "framework": "streamlit",
+    "dockerfile": "./Dockerfile.coolify",
+    "port": 8501,
+    
+    "environment": {
+      "production": {
+        "STREAMLIT_SERVER_HEADLESS": "true",
+        "LOG_LEVEL": "WARNING",
+        "ENABLE_MODEL_TRAINING": "false"
+      },
+      "staging": {
+        "STREAMLIT_SERVER_HEADLESS": "true", 
+        "LOG_LEVEL": "INFO",
+        "ENABLE_MODEL_TRAINING": "true"
+      },
+      "development": {
+        "STREAMLIT_SERVER_HEADLESS": "false",
+        "LOG_LEVEL": "DEBUG",
+        "ENABLE_MODEL_TRAINING": "true"
+      }
+    },
+    
+    "services": [
+      {
+        "name": "redis",
+        "image": "redis:7-alpine",
+        "environment": {
+          "REDIS_MAXMEMORY": "256mb",
+          "REDIS_MAXMEMORY_POLICY": "allkeys-lru"
+        },
+        "volumes": [
+          "redis_data:/data"
+        ]
+      }
+    ],
+    
+    "volumes": [
+      {
+        "name": "app_data",
+        "mount": "/app/data"
+      },
+      {
+        "name": "app_models", 
+        "mount": "/app/models"
+      },
+      {
+        "name": "app_results",
+        "mount": "/app/results"
+      },
+      {
+        "name": "app_logs",
+        "mount": "/app/logs"
+      }
+    ],
+    
+    "healthcheck": {
+      "path": "/_stcore/health",
+      "port": 8501,
+      "interval": "30s",
+      "timeout": "10s",
+      "retries": 3,
+      "start_period": "60s"
+    },
+    
+    "resources": {
+      "memory": "2G",
+      "cpu": "1.0"
+    },
+    
+    "deployment": {
+      "strategy": "rolling",
+      "max_unavailable": 0,
+      "max_surge": 1
+    },
+    
+    "domains": [
+      {
+        "host": "farmsky.yourdomain.com",
+        "ssl": true,
+        "redirect_http_to_https": true
+      }
+    ],
+    
+    "backup": {
+      "enabled": true,
+      "schedule": "0 2 * * *",
+      "retention": "7d",
+      "paths": ["/app/data", "/app/models"]
+    }
+  },
+  
+  "scripts": {
+    "build": "docker build -f Dockerfile.coolify -t farmsky/credit-scoring .",
+    "dev": "streamlit run app.py --server.port=8501",
+    "test": "python -m pytest tests/",
+    "lint": "flake8 .",
+    "format": "black ."
+  },
+  
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FarmSky-Co/farmer-credit-scoring"
+  },
+  
+  "author": "FarmSky Technologies",
+  "license": "MIT"
+}

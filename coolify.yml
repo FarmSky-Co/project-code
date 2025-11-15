@@ -1,0 +1,131 @@
+# Coolify Configuration for Farmer Credit Scoring System
+# This file configures your application for Coolify deployment
+
+# Application Configuration
+name: "Farmer Credit Scoring System"
+description: "AI-powered agricultural lending platform with ML credit scoring"
+type: "docker"
+
+# Docker Configuration
+dockerfile: "./Dockerfile"
+build_context: "."
+
+# Environment Variables for Coolify
+environment:
+  # Application Settings
+  PYTHONPATH: "/app"
+  PYTHONUNBUFFERED: "1"
+  PYTHONDONTWRITEBYTECODE: "1"
+  
+  # Streamlit Configuration
+  STREAMLIT_SERVER_PORT: "8501"
+  STREAMLIT_SERVER_ADDRESS: "0.0.0.0"
+  STREAMLIT_SERVER_ENABLE_CORS: "false"
+  STREAMLIT_SERVER_ENABLE_XSRF_PROTECTION: "false"
+  STREAMLIT_SERVER_HEADLESS: "true"
+  STREAMLIT_BROWSER_GATHER_USAGE_STATS: "false"
+  
+  # Security
+  SECRET_KEY: "{{ GENERATE_RANDOM_SECRET }}"
+  JWT_SECRET: "{{ GENERATE_RANDOM_SECRET }}"
+  
+  # Database (use Coolify's managed services or external)
+  DATABASE_URL: "sqlite:///data/farmsky.db"
+  
+  # Cache (Redis from Coolify)
+  REDIS_URL: "redis://redis:6379/0"
+  
+  # Logging
+  LOG_LEVEL: "INFO"
+  LOG_PATH: "/app/logs"
+  
+  # Performance
+  MAX_WORKERS: "4"
+  CACHE_TTL: "3600"
+  
+  # Feature Flags
+  ENABLE_MODEL_TRAINING: "true"
+  ENABLE_DATA_GENERATION: "true"
+  ENABLE_BATCH_PROCESSING: "true"
+
+# Port Configuration
+ports:
+  - container_port: 8501
+    public_port: 80
+    protocol: "http"
+
+# Volume Mounts
+volumes:
+  - host_path: "./data"
+    container_path: "/app/data"
+    type: "bind"
+  - host_path: "./models"
+    container_path: "/app/models"
+    type: "bind"
+  - host_path: "./results"
+    container_path: "/app/results"
+    type: "bind"
+  - host_path: "./logs"
+    container_path: "/app/logs"
+    type: "bind"
+
+# Health Check
+healthcheck:
+  path: "/_stcore/health"
+  port: 8501
+  interval: "30s"
+  timeout: "10s"
+  retries: 3
+  start_period: "60s"
+
+# Resource Limits
+resources:
+  memory: "2G"
+  cpu: "1.0"
+
+# Dependencies (Redis)
+services:
+  redis:
+    image: "redis:7-alpine"
+    environment:
+      REDIS_MAXMEMORY: "256mb"
+      REDIS_MAXMEMORY_POLICY: "allkeys-lru"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+# SSL/TLS Configuration
+ssl:
+  enabled: true
+  redirect_http_to_https: true
+
+# Deployment Strategy
+deployment:
+  strategy: "rolling"
+  max_unavailable: 0
+  max_surge: 1
+
+# Backup Configuration
+backup:
+  enabled: true
+  schedule: "0 2 * * *"  # Daily at 2 AM
+  retention: "7d"
+  paths:
+    - "/app/data"
+    - "/app/models"
+
+# Monitoring
+monitoring:
+  enabled: true
+  metrics_path: "/_stcore/metrics"
+  alerts:
+    - type: "http_status"
+      threshold: "5xx > 5"
+      duration: "5m"
+    - type: "memory_usage"
+      threshold: "> 80%"
+      duration: "5m"

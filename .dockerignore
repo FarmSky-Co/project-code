@@ -1,0 +1,88 @@
+# Docker ignore file for Farmer Credit Scoring System
+# Excludes unnecessary files from Docker build context
+
+# Python cache and compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environments
+venv/
+env/
+.venv/
+.env/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Git
+.git/
+.gitignore
+
+# Logs
+logs/
+*.log
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Large data files (keep only essential)
+*.csv
+*.xlsx
+*.parquet
+results/
+!data/synthetic_farmers.csv
+
+# Model files (large binaries)
+models/*.pkl
+models/*.joblib
+!models/__init__.py
+
+# Documentation
+*.md
+!README.md
+
+# Development tools
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Jupyter notebooks
+*.ipynb
+.ipynb_checkpoints/
+
+# Backup files
+*.bak
+*.backup
+
+# SSL certificates (should be mounted)
+ssl/
+*.pem
+*.key
+*.crt
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# Node modules (if any)
+node_modules/
+
+# Docker files themselves
+Dockerfile*
+docker-compose*.yml
+.dockerignore
